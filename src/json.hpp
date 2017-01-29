@@ -6311,8 +6311,10 @@ class basic_json
 
                 o << "[";
 
+                const bool pretty_print_array = false; // pretty_print;
+
                 // increase indentation
-                if (pretty_print)
+                if (pretty_print_array)
                 {
                     new_indent += indent_step;
                     o << "\n";
@@ -6322,20 +6324,23 @@ class basic_json
                 {
                     if (i != m_value.array->cbegin())
                     {
-                        o << (pretty_print ? ",\n" : ",");
+                        o << (pretty_print_array  ? ",\n" : ",");
                     }
-                    o << string_t(new_indent, ' ');
+                    if (pretty_print_array)
+                        o << string_t(new_indent, ' ');
                     i->dump(o, pretty_print, indent_step, new_indent);
                 }
 
                 // decrease indentation
-                if (pretty_print)
+                if (pretty_print_array)
                 {
                     new_indent -= indent_step;
                     o << "\n";
                 }
 
-                o << string_t(new_indent, ' ') << "]";
+                if (pretty_print_array)
+					o << string_t(new_indent, ' ');
+                o << "]";
                 return;
             }
 
