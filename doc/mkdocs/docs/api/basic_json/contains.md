@@ -16,8 +16,7 @@ bool contains(const json_pointer& ptr) const;
 ## Template parameters
 
 `KeyT`
-:   A type for an object key other than `basic_json::json_pointer` that is less-than comparable with `string_t`. This
-    can also be a string literal or a string view (C++17).
+:   A type for an object key other than `basic_json::json_pointer`.
 
 ## Parameters
 

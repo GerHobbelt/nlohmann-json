@@ -3775,33 +3775,6 @@ struct is_constructible_tuple : std::false_type {};
 template<typename T1, typename... Args>
 struct is_constructible_tuple<T1, std::tuple<Args...>> : conjunction<is_constructible<T1, Args>...> {};
 
-/// type to check if KeyType can be used as object key
-
-template<typename ComparatorType, typename KeyType, typename ObjectKeyType, typename = void>
-struct is_key_type_comparable
-{
-    static constexpr bool value = false;
-};
-
-template<typename ComparatorType, typename KeyType, typename ObjectKeyType>
-struct is_key_type_comparable<ComparatorType, KeyType, ObjectKeyType, void_t<
-decltype(ComparatorType()(std::declval<KeyType const&>(), std::declval<ObjectKeyType const&>())),
-decltype(ComparatorType()(std::declval<ObjectKeyType const&>(), std::declval<KeyType const&>()))
-        >>
-{
-    static constexpr bool value = true;
-};
-
-template<typename BasicJsonType, typename KeyType>
-struct is_usable_as_key_type
-{
-    static constexpr bool value =
-        is_key_type_comparable<typename BasicJsonType::object_comparator_t, typename BasicJsonType::object_t::key_type, KeyType>::value &&
-        !std::is_same<KeyType, typename BasicJsonType::iterator>::value &&
-        !std::is_same<KeyType, typename BasicJsonType::const_iterator>::value;
-};
-
-
 // a naive helper to check if a type is an ordered_map (exploits the fact that
 // ordered_map inherits capacity() from std::vector)
 template <typename T>
@@ -17695,12 +17668,10 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
                 default:
                 {
                     object = nullptr;  // silence warning, see #821
-                    // LCOV_EXCL_START
                     if (JSON_HEDLEY_UNLIKELY(t == value_t::null))
                     {
                         JSON_THROW(other_error::create(500, "961c151d2e87f2686a955a9be24d316f1362bf21 3.10.4", basic_json())); // LCOV_EXCL_LINE
                     }
-                    // LCOV_EXCL_STOP
                     break;
                 }
             }
@@ -19153,17 +19124,22 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     reference at(const typename object_t::key_type& key)
     {
         // at only works for objects
-        if (JSON_HEDLEY_UNLIKELY(!is_object()))
+        if (JSON_HEDLEY_LIKELY(is_object()))
+        {
+            JSON_TRY
+            {
+                return set_parent(m_value.object->at(key));
+            }
+            JSON_CATCH (std::out_of_range&)
+            {
+                // create better exception explanation
+                JSON_THROW(out_of_range::create(403, "key '" + key + "' not found", *this));
+            }
+        }
+        else
         {
             JSON_THROW(type_error::create(304, "cannot use at() with " + std::string(type_name()), *this));
         }
-
-        auto it = m_value.object->find(key);
-        if (it == m_value.object->end())
-        {
-            JSON_THROW(out_of_range::create(403, "key '" + std::string(key) + "' not found", *this));
-        }
-        return set_parent(it->second);
     }
 
     /// @brief access specified object element with bounds checking
@@ -19171,17 +19147,22 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     const_reference at(const typename object_t::key_type& key) const
     {
         // at only works for objects
-        if (JSON_HEDLEY_UNLIKELY(!is_object()))
+        if (JSON_HEDLEY_LIKELY(is_object()))
+        {
+            JSON_TRY
+            {
+                return m_value.object->at(key);
+            }
+            JSON_CATCH (std::out_of_range&)
+            {
+                // create better exception explanation
+                JSON_THROW(out_of_range::create(403, "key '" + key + "' not found", *this));
+            }
+        }
+        else
         {
             JSON_THROW(type_error::create(304, "cannot use at() with " + std::string(type_name()), *this));
         }
-
-        auto it = m_value.object->find(key);
-        if (it == m_value.object->end())
-        {
-            JSON_THROW(out_of_range::create(403, "key '" + std::string(key) + "' not found", *this));
-        }
-        return it->second;
     }
 
     /// @brief access specified array element
@@ -19258,8 +19239,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         // operator[] only works for objects
         if (JSON_HEDLEY_LIKELY(is_object()))
         {
-            auto result = m_value.object->emplace(std::forward<KeyT>(key), nullptr);
-            return set_parent(result.first->second);
+            return set_parent(m_value.object->operator[](key));
         }
 
         JSON_THROW(type_error::create(305, "cannot use operator[] with a string argument with " + std::string(type_name()), *this));
@@ -19333,10 +19313,10 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
             const auto it = find(key);
             if (it != end())
             {
-                return it->template get<typename std::decay<ValueType>::type>();
+                return it->template get<ValueType>();
             }
 
-            return std::forward<ValueType>(default_value);
+            return default_value;
         }
 
         JSON_THROW(type_error::create(306, "cannot use value() with " + std::string(type_name()), *this));
@@ -19354,7 +19334,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     /// @sa https://json.nlohmann.me/api/basic_json/value/
     template<class ValueType, typename std::enable_if<
                  detail::is_getable<basic_json_t, ValueType>::value, int>::type = 0>
-    typename std::decay<ValueType>::type value(const json_pointer& ptr, ValueType && default_value) const
+    ValueType value(const json_pointer& ptr, const ValueType& default_value) const
     {
         // at only works for objects
         if (JSON_HEDLEY_LIKELY(is_object()))
@@ -19366,7 +19346,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
             }
             JSON_INTERNAL_CATCH (out_of_range&)
             {
-                return std::forward<ValueType>(default_value);
+                return default_value;
             }
         }
 
@@ -19564,19 +19544,12 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     size_type erase(const typename object_t::key_type& key)
     {
         // this erase only works for objects
-        if (JSON_HEDLEY_UNLIKELY(!is_object()))
+        if (JSON_HEDLEY_LIKELY(is_object()))
         {
-            JSON_THROW(type_error::create(307, "cannot use erase() with " + std::string(type_name()), *this));
+            return m_value.object->erase(key);
         }
 
-        const auto it = m_value.object->find(key);
-        if (it != m_value.object->end())
-        {
-            m_value.object->erase(it);
-            return 1;
-        }
-
-        return 0;
+        JSON_THROW(type_error::create(307, "cannot use erase() with " + std::string(type_name()), *this));
     }
 
     /// @brief remove element from a JSON array given an index
@@ -19618,7 +19591,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
 
         if (is_object())
         {
-            result.m_it.object_iterator = m_value.object->find(key);
+            result.m_it.object_iterator = m_value.object->find(std::forward<KeyT>(key));
         }
 
         return result;
@@ -19633,7 +19606,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
 
         if (is_object())
         {
-            result.m_it.object_iterator = m_value.object->find(key);
+            result.m_it.object_iterator = m_value.object->find(std::forward<KeyT>(key));
         }
 
         return result;
@@ -19645,7 +19618,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
     size_type count(KeyT&& key) const
     {
         // return 0 for all nonobject types
-        return is_object() ? m_value.object->count(key) : 0;
+        return is_object() ? m_value.object->count(std::forward<KeyT>(key)) : 0;
     }
 
     /// @brief check the existence of an element in a JSON object

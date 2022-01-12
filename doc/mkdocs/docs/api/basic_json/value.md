@@ -2,14 +2,14 @@
 
 ```cpp
 // (1)
-template<class KeyType, class ValueType>
-ValueType value(const KeyType& key,
-                ValueType && default_value) const;
+template<class ValueType>
+ValueType value(const typename object_t::key_type& key,
+                const ValueType& default_value) const;
 
 // (2)
 template<class ValueType>
 ValueType value(const json_pointer& ptr,
-                ValueType && default_value) const;
+                const ValueType& default_value) const;
 ```
 
 1. Returns either a copy of an object's element at the specified key `key` or a given default value if no element with
@@ -44,9 +44,6 @@ ValueType value(const json_pointer& ptr,
 
 ## Template parameters
 
-`KeyType`
-:   A type for an object key that is less-than comparable with `string_t`. This can also be a string literal or a string
-    view (C++17).
 `ValueType` 
 :   type compatible to JSON values, for instance `#!cpp int` for JSON integer numbers, `#!cpp bool` for JSON booleans,
     or `#!cpp std::vector` types for JSON arrays. Note the type of the expected value at `key`/`ptr` and the default
@@ -129,4 +126,4 @@ changes to any JSON value.
 ## Version history
 
 1. Added in version 1.0.0.
-2. Added in version 2.0.2. `KeyType` template parameter added in 3.10.0.
+2. Added in version 2.0.2.
