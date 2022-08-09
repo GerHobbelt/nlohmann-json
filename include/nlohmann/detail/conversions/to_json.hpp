@@ -272,6 +272,13 @@ inline void to_json(BasicJsonType& j, T b) noexcept
     external_constructor<value_t::boolean>::construct(j, b);
 }
 
+template<typename BasicJsonType,
+         enable_if_t<std::is_convertible<const std::vector<bool>::reference&, typename BasicJsonType::boolean_t>::value, int> = 0>
+inline void to_json(BasicJsonType& j, const std::vector<bool>::reference& b) noexcept
+{
+    external_constructor<value_t::boolean>::construct(j, static_cast<typename BasicJsonType::boolean_t>(b));
+}
+
 template<typename BasicJsonType, typename CompatibleString,
          enable_if_t<std::is_constructible<typename BasicJsonType::string_t, CompatibleString>::value, int> = 0>
 inline void to_json(BasicJsonType& j, const CompatibleString& s)
@@ -306,6 +313,7 @@ inline void to_json(BasicJsonType& j, CompatibleNumberIntegerType val) noexcept
     external_constructor<value_t::number_integer>::construct(j, static_cast<typename BasicJsonType::number_integer_t>(val));
 }
 
+#if !JSON_DISABLE_ENUM_SERIALIZATION
 template<typename BasicJsonType, typename EnumType,
          enable_if_t<std::is_enum<EnumType>::value, int> = 0>
 inline void to_json(BasicJsonType& j, EnumType e) noexcept
@@ -313,6 +321,7 @@ inline void to_json(BasicJsonType& j, EnumType e) noexcept
     using underlying_type = typename std::underlying_type<EnumType>::type;
     external_constructor<value_t::number_integer>::construct(j, static_cast<underlying_type>(e));
 }
+#endif  // JSON_DISABLE_ENUM_SERIALIZATION
 
 template<typename BasicJsonType>
 inline void to_json(BasicJsonType& j, const std::vector<bool>& e)

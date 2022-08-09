@@ -98,19 +98,30 @@ TEST_CASE("BJData")
     {
         SECTION("array")
         {
-            SECTION("optimized array: no size following type")
-            {
-                std::vector<uint8_t> v = {'[', '$', 'i', 2};
-                json _;
-                CHECK_THROWS_WITH_AS(_ = json::from_bjdata(v), "[json.exception.parse_error.112] parse error at byte 4: syntax error while parsing BJData size: expected '#' after type information; last byte: 0x02", json::parse_error&);
-            }
-
             SECTION("optimized array: negative size")
             {
                 std::vector<uint8_t> vM = {'[', '$', 'M', '#', '[', 'I', 0x00, 0x20, 'M', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0xFF, ']'};
+                std::vector<uint8_t> vMX = {'[', '$', 'U', '#', '[', 'M', 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 'U', 0x01, ']'};
 
                 json _;
                 CHECK_THROWS_WITH_AS(_ = json::from_bjdata(vM), "[json.exception.out_of_range.408] syntax error while parsing BJData size: integer value overflow", json::out_of_range&);
+                CHECK(json::from_bjdata(vM, true, false).is_discarded());
+
+                CHECK_THROWS_WITH_AS(_ = json::from_bjdata(vMX), "[json.exception.out_of_range.408] syntax error while parsing BJData size: integer value overflow", json::out_of_range&);
+                CHECK(json::from_bjdata(vMX, true, false).is_discarded());
+            }
+
+            SECTION("optimized array: integer value overflow")
+            {
+                std::vector<uint8_t> vL = {'[', '#', 'L', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7F};
+                std::vector<uint8_t> vM = {'[', '$', 'M', '#', '[', 'I', 0x00, 0x20, 'M', 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0xFF, ']'};
+
+                json _;
+                CHECK_THROWS_WITH_AS(_ = json::from_bjdata(vL), "[json.exception.out_of_range.408] syntax error while parsing BJData size: integer value overflow", json::out_of_range&);
+                CHECK(json::from_bjdata(vL, true, false).is_discarded());
+
+                CHECK_THROWS_WITH_AS(_ = json::from_bjdata(vM), "[json.exception.out_of_range.408] syntax error while parsing BJData size: integer value overflow", json::out_of_range&);
+                CHECK(json::from_bjdata(vM, true, false).is_discarded());
             }
         }
     }

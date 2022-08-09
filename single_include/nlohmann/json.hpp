@@ -2684,6 +2684,10 @@ using is_detected_convertible =
     #define JSON_USE_LEGACY_DISCARDED_VALUE_COMPARISON 0
 #endif
 
+#ifndef JSON_DISABLE_ENUM_SERIALIZATION
+    #define JSON_DISABLE_ENUM_SERIALIZATION 0
+#endif
+
 #if JSON_HAS_THREE_WAY_COMPARISON
     #include <compare> // partial_ordering
 #endif
@@ -3374,7 +3378,7 @@ template<class...> struct conjunction : std::true_type { };
 template<class B> struct conjunction<B> : B { };
 template<class B, class... Bn>
 struct conjunction<B, Bn...>
-: std::conditional<bool(B::value), conjunction<Bn...>, B>::type {};
+: std::conditional<static_cast<bool>(B::value), conjunction<Bn...>, B>::type {};
 
 // https://en.cppreference.com/w/cpp/types/negation
 template<class B> struct negation : std::integral_constant < bool, !B::value > { };
@@ -4384,6 +4388,7 @@ inline void from_json(const BasicJsonType& j, typename BasicJsonType::number_int
     get_arithmetic_value(j, val);
 }
 
+#if !JSON_DISABLE_ENUM_SERIALIZATION
 template<typename BasicJsonType, typename EnumType,
          enable_if_t<std::is_enum<EnumType>::value, int> = 0>
 inline void from_json(const BasicJsonType& j, EnumType& e)
@@ -4392,6 +4397,7 @@ inline void from_json(const BasicJsonType& j, EnumType& e)
     get_arithmetic_value(j, val);
     e = static_cast<EnumType>(val);
 }
+#endif  // JSON_DISABLE_ENUM_SERIALIZATION
 
 // forward_list doesn't have an insert method
 template<typename BasicJsonType, typename T, typename Allocator,
@@ -5253,6 +5259,13 @@ inline void to_json(BasicJsonType& j, T b) noexcept
     external_constructor<value_t::boolean>::construct(j, b);
 }
 
+template<typename BasicJsonType,
+         enable_if_t<std::is_convertible<const std::vector<bool>::reference&, typename BasicJsonType::boolean_t>::value, int> = 0>
+inline void to_json(BasicJsonType& j, const std::vector<bool>::reference& b) noexcept
+{
+    external_constructor<value_t::boolean>::construct(j, static_cast<typename BasicJsonType::boolean_t>(b));
+}
+
 template<typename BasicJsonType, typename CompatibleString,
          enable_if_t<std::is_constructible<typename BasicJsonType::string_t, CompatibleString>::value, int> = 0>
 inline void to_json(BasicJsonType& j, const CompatibleString& s)
@@ -5287,6 +5300,7 @@ inline void to_json(BasicJsonType& j, CompatibleNumberIntegerType val) noexcept
     external_constructor<value_t::number_integer>::construct(j, static_cast<typename BasicJsonType::number_integer_t>(val));
 }
 
+#if !JSON_DISABLE_ENUM_SERIALIZATION
 template<typename BasicJsonType, typename EnumType,
          enable_if_t<std::is_enum<EnumType>::value, int> = 0>
 inline void to_json(BasicJsonType& j, EnumType e) noexcept
@@ -5294,6 +5308,7 @@ inline void to_json(BasicJsonType& j, EnumType e) noexcept
     using underlying_type = typename std::underlying_type<EnumType>::type;
     external_constructor<value_t::number_integer>::construct(j, static_cast<underlying_type>(e));
 }
+#endif  // JSON_DISABLE_ENUM_SERIALIZATION
 
 template<typename BasicJsonType>
 inline void to_json(BasicJsonType& j, const std::vector<bool>& e)
@@ -9303,7 +9318,8 @@ class binary_reader
             case 0x95:
             case 0x96:
             case 0x97:
-                return get_cbor_array(static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x1Fu), tag_handler);
+                return get_cbor_array(
+                           conditional_static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x1Fu), tag_handler);
 
             case 0x98: // array (one-byte uint8_t for n follows)
             {
@@ -9320,13 +9336,13 @@ class binary_reader
             case 0x9A: // array (four-byte uint32_t for n follow)
             {
                 std::uint32_t len{};
-                return get_number(input_format_t::cbor, len) && get_cbor_array(static_cast<std::size_t>(len), tag_handler);
+                return get_number(input_format_t::cbor, len) && get_cbor_array(conditional_static_cast<std::size_t>(len), tag_handler);
             }
 
             case 0x9B: // array (eight-byte uint64_t for n follow)
             {
                 std::uint64_t len{};
-                return get_number(input_format_t::cbor, len) && get_cbor_array(detail::conditional_static_cast<std::size_t>(len), tag_handler);
+                return get_number(input_format_t::cbor, len) && get_cbor_array(conditional_static_cast<std::size_t>(len), tag_handler);
             }
 
             case 0x9F: // array (indefinite length)
@@ -9357,7 +9373,7 @@ class binary_reader
             case 0xB5:
             case 0xB6:
             case 0xB7:
-                return get_cbor_object(static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x1Fu), tag_handler);
+                return get_cbor_object(conditional_static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x1Fu), tag_handler);
 
             case 0xB8: // map (one-byte uint8_t for n follows)
             {
@@ -9374,13 +9390,13 @@ class binary_reader
             case 0xBA: // map (four-byte uint32_t for n follow)
             {
                 std::uint32_t len{};
-                return get_number(input_format_t::cbor, len) && get_cbor_object(static_cast<std::size_t>(len), tag_handler);
+                return get_number(input_format_t::cbor, len) && get_cbor_object(conditional_static_cast<std::size_t>(len), tag_handler);
             }
 
             case 0xBB: // map (eight-byte uint64_t for n follow)
             {
                 std::uint64_t len{};
-                return get_number(input_format_t::cbor, len) && get_cbor_object(detail::conditional_static_cast<std::size_t>(len), tag_handler);
+                return get_number(input_format_t::cbor, len) && get_cbor_object(conditional_static_cast<std::size_t>(len), tag_handler);
             }
 
             case 0xBF: // map (indefinite length)
@@ -10027,7 +10043,7 @@ class binary_reader
             case 0x8D:
             case 0x8E:
             case 0x8F:
-                return get_msgpack_object(static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x0Fu));
+                return get_msgpack_object(conditional_static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x0Fu));
 
             // fixarray
             case 0x90:
@@ -10046,7 +10062,7 @@ class binary_reader
             case 0x9D:
             case 0x9E:
             case 0x9F:
-                return get_msgpack_array(static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x0Fu));
+                return get_msgpack_array(conditional_static_cast<std::size_t>(static_cast<unsigned int>(current) & 0x0Fu));
 
             // fixstr
             case 0xA0:
@@ -10183,7 +10199,7 @@ class binary_reader
             case 0xDD: // array 32
             {
                 std::uint32_t len{};
-                return get_number(input_format_t::msgpack, len) && get_msgpack_array(static_cast<std::size_t>(len));
+                return get_number(input_format_t::msgpack, len) && get_msgpack_array(conditional_static_cast<std::size_t>(len));
             }
 
             case 0xDE: // map 16
@@ -10195,7 +10211,7 @@ class binary_reader
             case 0xDF: // map 32
             {
                 std::uint32_t len{};
-                return get_number(input_format_t::msgpack, len) && get_msgpack_object(static_cast<std::size_t>(len));
+                return get_number(input_format_t::msgpack, len) && get_msgpack_object(conditional_static_cast<std::size_t>(len));
             }
 
             // negative fixint
@@ -10766,9 +10782,8 @@ class binary_reader
                 }
                 if (!value_in_range_of<std::size_t>(number))
                 {
-                    // undo coverage exclusion once the 32bit test is run as part of CI (#3524)
-                    return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408, // LCOV_EXCL_LINE
-                                            exception_message(input_format, "integer value overflow", "size"), nullptr)); // LCOV_EXCL_LINE
+                    return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408,
+                                            exception_message(input_format, "integer value overflow", "size"), nullptr));
                 }
                 result = static_cast<std::size_t>(number);
                 return true;
@@ -10800,7 +10815,7 @@ class binary_reader
                 {
                     return false;
                 }
-                result = static_cast<std::size_t>(number);
+                result = conditional_static_cast<std::size_t>(number);
                 return true;
             }
 
@@ -10817,9 +10832,8 @@ class binary_reader
                 }
                 if (!value_in_range_of<std::size_t>(number))
                 {
-                    // undo coverage exclusion once the 32bit test is run as part of CI (#3524)
-                    return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408, // LCOV_EXCL_LINE
-                                            exception_message(input_format, "integer value overflow", "size"), nullptr)); // LCOV_EXCL_LINE
+                    return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408,
+                                            exception_message(input_format, "integer value overflow", "size"), nullptr));
                 }
                 result = detail::conditional_static_cast<std::size_t>(number);
                 return true;
@@ -10865,7 +10879,7 @@ class binary_reader
                     for (auto i : dim)
                     {
                         result *= i;
-                        if (result == 0) // because dim elements shall not have zeros, result = 0 means overflow happened
+                        if (result == 0 || result == string_t::npos) // because dim elements shall not have zeros, result = 0 means overflow happened; it also can't be string_t::npos as it is used to initialize size in get_ubjson_size_type()
                         {
                             return sax->parse_error(chars_read, get_token_string(), out_of_range::create(408, exception_message(input_format, "excessive ndarray size caused overflow", "size"), nullptr));
                         }
@@ -12379,7 +12393,7 @@ class iter_impl // NOLINT(cppcoreguidelines-special-member-functions,hicpp-speci
                   "iter_impl only accepts (const) basic_json");
     // superficial check for the LegacyBidirectionalIterator named requirement
     static_assert(std::is_base_of<std::bidirectional_iterator_tag, std::bidirectional_iterator_tag>::value
-                  &&  std::is_base_of<std::bidirectional_iterator_tag, typename array_t::iterator::iterator_category>::value,
+                  &&  std::is_base_of<std::bidirectional_iterator_tag, typename std::iterator_traits<typename array_t::iterator>::iterator_category>::value,
                   "basic_json iterator assumes array and object type iterators satisfy the LegacyBidirectionalIterator named requirement.");
 
   public:
@@ -23574,6 +23588,7 @@ inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std
 #undef NLOHMANN_CAN_CALL_STD_FUNC_IMPL
 #undef JSON_INLINE_VARIABLE
 #undef JSON_NO_UNIQUE_ADDRESS
+#undef JSON_DISABLE_ENUM_SERIALIZATION
 
 #ifndef JSON_TEST_KEEP_MACROS
     #undef JSON_CATCH
