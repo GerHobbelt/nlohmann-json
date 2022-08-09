@@ -1,6 +1,6 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++ (supporting code)
-// |  |  |__   |  |  | | | |  version 3.10.5
+// |  |  |__   |  |  | | | |  version 3.11.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
 // Copyright (c) 2013-2022 Niels Lohmann <http://nlohmann.me>.
@@ -11,6 +11,7 @@
 
 #include <nlohmann/json.hpp>
 using nlohmann::json;
+using namespace nlohmann::literals; // NOLINT(google-build-using-namespace)
 
 #include <iostream>
 #include <iterator>

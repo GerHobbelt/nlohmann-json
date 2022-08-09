@@ -1,6 +1,6 @@
 //     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++ (supporting code)
-// |  |  |__   |  |  | | | |  version 3.10.5
+// |  |  |__   |  |  | | | |  version 3.11.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
 // Copyright (c) 2013-2022 Niels Lohmann <http://nlohmann.me>.
@@ -10,6 +10,7 @@
 #include "doctest_compatibility.h"
 
 #include <nlohmann/json.hpp>
+using namespace nlohmann::literals; // NOLINT(google-build-using-namespace)
 
 TEST_CASE_TEMPLATE("element access 2", Json, nlohmann::json, nlohmann::ordered_json)
 {
