@@ -1087,6 +1087,11 @@ The following compilers are currently used in continuous integration at [AppVeyo
 | Apple Clang 12.0.0 (clang-1200.0.32.27); Xcode 12.2                                                    | macOS 10.15.7      | GitHub Actions |
 | Apple Clang 12.0.0 (clang-1200.0.32.28); Xcode 12.3                                                    | macOS 10.15.7      | GitHub Actions |
 | Apple Clang 12.0.0 (clang-1200.0.32.29); Xcode 12.4                                                    | macOS 10.15.7      | GitHub Actions |
+| Apple Clang 13.0.0 (clang-1300.0.29.3); Xcode 13.1                                                     | macOS 12.3.1       | GitHub Actions |
+| Apple Clang 13.0.0 (clang-1300.0.29.30); Xcode 13.2                                                    | macOS 12.3.1       | GitHub Actions |
+| Apple Clang 13.0.0 (clang-1300.0.29.30); Xcode 13.2.1                                                  | macOS 12.3.1       | GitHub Actions |
+| Apple Clang 13.1.6 (clang-1316.0.21.2); Xcode 13.3                                                     | macOS 12.3.1       | GitHub Actions |
+| Apple Clang 13.1.6 (clang-1316.0.21.2.3); Xcode 13.3.1                                                 | macOS 12.3.1       | GitHub Actions |
 | Clang 3.5.2 (3.5.2-3ubuntu1)                                                                           | Ubuntu 20.04.3 LTS | GitHub Actions |
 | Clang 3.6.2 (3.6.2-3ubuntu2)                                                                           | Ubuntu 20.04.3 LTS | GitHub Actions |
 | Clang 3.7.1 (3.7.1-2ubuntu2)                                                                           | Ubuntu 20.04.3 LTS | GitHub Actions |
@@ -1617,6 +1622,7 @@ I deeply appreciate the help of the following people.
 - [Andrea Cocito](https://github.com/puffetto) added a clarification on macro usage to the documentation.
 - [Krzysiek Karbowiak](https://github.com/kkarbowiak) refactored the tests to use `CHECK_THROWS_WITH_AS`.
 - [Chaoqi Zhang](https://github.com/prncoprs) fixed a typo.
+- [ivanovmp](https://github.com/ivanovmp) fixed a whitespace error.
 
 Thanks a lot for helping out! Please [let me know](mailto:mail@nlohmann.me) if I forgot someone.
 
@@ -1651,7 +1657,7 @@ The library itself consists of a single header file licensed under the MIT licen
 
 ## Projects using JSON for Modern C++
 
-The library is currently used in Apple macOS Sierra and iOS 10. I am not sure what they are using the library for, but I am happy that it runs on so many devices.
+The library is currently used in Apple macOS Sierra-Monterey and iOS 10-15. I am not sure what they are using the library for, but I am happy that it runs on so many devices.
 
 
 ## Notes

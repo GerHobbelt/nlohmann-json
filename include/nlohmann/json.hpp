@@ -33,7 +33,7 @@ SOFTWARE.
  * contains the most recent documentation and should also be applicable to  *
  * previous versions; documentation for deprecated functions is not         *
  * removed, but marked deprecated. See "Generate documentation" section in  *
- * file docs/README.md.                                                      *
+ * file docs/README.md.                                                     *
 \****************************************************************************/
 
 #ifndef INCLUDE_NLOHMANN_JSON_HPP_
@@ -916,6 +916,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
             default:            // LCOV_EXCL_LINE
                 JSON_ASSERT(false); // NOLINT(cert-dcl03-c,hicpp-static-assert,misc-static-assert) LCOV_EXCL_LINE
         }
+        JSON_ASSERT(m_type == val.type());
         set_parents();
         assert_invariant();
     }
