@@ -6,15 +6,16 @@
 // SPDX-FileCopyrightText: 2013-2022 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
-#pragma once
+#include "doctest_compatibility.h"
 
-#include <cstddef>
+#ifdef _WIN32
+    #include <windows.h>
+#endif
 
-std::size_t json_sizeof_diag_on();
-std::size_t json_sizeof_diag_on_explicit();
+#include <nlohmann/json.hpp>
+using nlohmann::json;
 
-std::size_t json_sizeof_diag_off();
-std::size_t json_sizeof_diag_off_explicit();
-
-void json_at_diag_on();
-void json_at_diag_off();
+TEST_CASE("include windows.h")
+{
+    CHECK(true);
+}
