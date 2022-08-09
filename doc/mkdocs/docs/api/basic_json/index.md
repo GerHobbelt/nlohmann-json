@@ -128,6 +128,7 @@ The class satisfies the following concept requirements:
 - [**array_t**](array_t.md) - type for arrays
 - [**binary_t**](binary_t.md) - type for binary arrays
 - [**boolean_t**](boolean_t.md) - type for booleans
+- [**default_object_comparator_t**](default_object_comparator_t.md) - default comparator for objects
 - [**number_float_t**](number_float_t.md) - type for numbers (floating-point)
 - [**number_integer_t**](number_integer_t.md) - type for numbers (integer)
 - [**number_unsigned_t**](number_unsigned_t.md) - type for numbers (unsigned)
@@ -292,7 +293,7 @@ Access to the JSON value
 - [**std::hash&lt;basic_json&gt;**](std_hash.md) - return a hash value for a JSON object
 - [**std::swap&lt;basic_json&gt;**](std_swap.md) - exchanges the values of two JSON objects
 
-## Example
+## Examples
 
 ??? example
 
