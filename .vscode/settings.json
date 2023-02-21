@@ -1,0 +1,8 @@
+{
+    "cmake.configureSettings": {
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${workspaceFolder}/_build",
+        "CMAKE_SIZE": "size",
+    },
+    "cmake.buildDirectory": "${workspaceFolder}/_build/cmake",
+    "C_Cpp.autoAddFileAssociations": false,
+}
