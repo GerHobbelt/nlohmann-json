@@ -2485,6 +2485,14 @@ JSON_HEDLEY_DIAGNOSTIC_POP
     #endif
 #endif
 
+#ifndef JSON_HAS_STATIC_RTTI
+    #if !defined(_HAS_STATIC_RTTI) || _HAS_STATIC_RTTI != 0
+        #define JSON_HAS_STATIC_RTTI 1
+    #else
+        #define JSON_HAS_STATIC_RTTI 0
+    #endif
+#endif
+
 #ifdef JSON_HAS_CPP_17
     #define JSON_INLINE_VARIABLE inline
 #else
@@ -6360,7 +6368,7 @@ struct wide_string_input_helper<BaseInputAdapter, 2>
     }
 };
 
-// Wraps another input apdater to convert wide character types into individual bytes.
+// Wraps another input adapter to convert wide character types into individual bytes.
 template<typename BaseInputAdapter, typename WideCharType>
 class wide_string_input_adapter
 {
@@ -19268,7 +19276,9 @@ NLOHMANN_JSON_NAMESPACE_END
 
 
 #if defined(JSON_HAS_CPP_17)
-    #include <any>
+    #if JSON_HAS_STATIC_RTTI
+        #include <any>
+    #endif
     #include <string_view>
 #endif
 
@@ -20112,7 +20122,10 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
         bool is_an_object = std::all_of(init.begin(), init.end(),
                                         [](const detail::json_ref<basic_json>& element_ref)
         {
-            return element_ref->is_array() && element_ref->size() == 2 && (*element_ref)[0].is_string();
+            // The cast is to ensure op[size_type] is called, bearing in mind size_type may not be int;
+            // (many string types can be constructed from 0 via its null-pointer guise, so we get a
+            // broken call to op[key_type], the wrong semantics and a 4804 warning on Windows)
+            return element_ref->is_array() && element_ref->size() == 2 && (*element_ref)[static_cast<size_type>(0)].is_string();
         });
 
         // adjust type if type deduction is not wanted
@@ -21089,7 +21102,7 @@ class basic_json // NOLINT(cppcoreguidelines-special-member-functions,hicpp-spec
 #if defined(JSON_HAS_CPP_17) && (defined(__GNUC__) || (defined(_MSC_VER) && _MSC_VER >= 1910 && _MSC_VER <= 1914))
                                                 detail::negation<std::is_same<ValueType, std::string_view>>,
 #endif
-#if defined(JSON_HAS_CPP_17)
+#if defined(JSON_HAS_CPP_17) && JSON_HAS_STATIC_RTTI
                                                 detail::negation<std::is_same<ValueType, std::any>>,
 #endif
                                                 detail::is_detected_lazy<detail::get_template_function, const basic_json_t&, ValueType>
@@ -24365,7 +24378,11 @@ inline namespace json_literals
 /// @brief user-defined string literal for JSON values
 /// @sa https://json.nlohmann.me/api/basic_json/operator_literal_json/
 JSON_HEDLEY_NON_NULL(1)
-inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+#if !defined(JSON_HEDLEY_GCC_VERSION) || JSON_HEDLEY_GCC_VERSION_CHECK(4,9,0)
+    inline nlohmann::json operator ""_json(const char* s, std::size_t n)
+#else
+    inline nlohmann::json operator "" _json(const char* s, std::size_t n)
+#endif
 {
     return nlohmann::json::parse(s, s + n);
 }
@@ -24373,7 +24390,11 @@ inline nlohmann::json operator "" _json(const char* s, std::size_t n)
 /// @brief user-defined string literal for JSON pointer
 /// @sa https://json.nlohmann.me/api/basic_json/operator_literal_json_pointer/
 JSON_HEDLEY_NON_NULL(1)
-inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+#if !defined(JSON_HEDLEY_GCC_VERSION) || JSON_HEDLEY_GCC_VERSION_CHECK(4,9,0)
+    inline nlohmann::json::json_pointer operator ""_json_pointer(const char* s, std::size_t n)
+#else
+    inline nlohmann::json::json_pointer operator "" _json_pointer(const char* s, std::size_t n)
+#endif
 {
     return nlohmann::json::json_pointer(std::string(s, n));
 }
@@ -24437,8 +24458,13 @@ inline void swap(nlohmann::NLOHMANN_BASIC_JSON_TPL& j1, nlohmann::NLOHMANN_BASIC
 }  // namespace std
 
 #if JSON_USE_GLOBAL_UDLS
-    using nlohmann::literals::json_literals::operator "" _json; // NOLINT(misc-unused-using-decls,google-global-names-in-headers)
-    using nlohmann::literals::json_literals::operator "" _json_pointer; //NOLINT(misc-unused-using-decls,google-global-names-in-headers)
+    #if !defined(JSON_HEDLEY_GCC_VERSION) || JSON_HEDLEY_GCC_VERSION_CHECK(4,9,0)
+        using nlohmann::literals::json_literals::operator ""_json; // NOLINT(misc-unused-using-decls,google-global-names-in-headers)
+        using nlohmann::literals::json_literals::operator ""_json_pointer; //NOLINT(misc-unused-using-decls,google-global-names-in-headers)
+    #else
+        using nlohmann::literals::json_literals::operator "" _json; // NOLINT(misc-unused-using-decls,google-global-names-in-headers)
+        using nlohmann::literals::json_literals::operator "" _json_pointer; //NOLINT(misc-unused-using-decls,google-global-names-in-headers)
+    #endif
 #endif
 
 // #include <nlohmann/detail/macro_unscope.hpp>
@@ -24482,6 +24508,7 @@ inline void swap(nlohmann::NLOHMANN_BASIC_JSON_TPL& j1, nlohmann::NLOHMANN_BASIC
     #undef JSON_HAS_EXPERIMENTAL_FILESYSTEM
     #undef JSON_HAS_THREE_WAY_COMPARISON
     #undef JSON_HAS_RANGES
+    #undef JSON_HAS_STATIC_RTTI
     #undef JSON_USE_LEGACY_DISCARDED_VALUE_COMPARISON
 #endif
 
