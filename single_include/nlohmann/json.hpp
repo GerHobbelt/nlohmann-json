@@ -2758,6 +2758,9 @@ JSON_HEDLEY_DIAGNOSTIC_POP
     friend void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) } \
     friend void from_json(const nlohmann::json& nlohmann_json_j, Type& nlohmann_json_t) { const Type nlohmann_json_default_obj{}; NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_FROM_WITH_DEFAULT, __VA_ARGS__)) }
 
+#define NLOHMANN_DEFINE_TYPE_INTRUSIVE_ONLY_SERIALIZE(Type, ...)  \
+    friend void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) }
+
 /*!
 @brief macro
 @def NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE
@@ -2766,6 +2769,9 @@ JSON_HEDLEY_DIAGNOSTIC_POP
 #define NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Type, ...)  \
     inline void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) } \
     inline void from_json(const nlohmann::json& nlohmann_json_j, Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_FROM, __VA_ARGS__)) }
+
+#define NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_ONLY_SERIALIZE(Type, ...)  \
+    inline void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) }
 
 #define NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Type, ...)  \
     inline void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) } \
@@ -12441,13 +12447,25 @@ class parser
                                                 m_lexer.get_token_string(),
                                                 parse_error::create(101, m_lexer.get_position(), exception_message(token_type::uninitialized, "value"), nullptr));
                     }
+                    case token_type::end_of_input:
+                    {
+                        if (JSON_HEDLEY_UNLIKELY(m_lexer.get_position().chars_read_total == 1))
+                        {
+                            return sax->parse_error(m_lexer.get_position(),
+                                                    m_lexer.get_token_string(),
+                                                    parse_error::create(101, m_lexer.get_position(),
+                                                            "attempting to parse an empty input; check that your input string or stream contains the expected JSON", nullptr));
+                        }
 
+                        return sax->parse_error(m_lexer.get_position(),
+                                                m_lexer.get_token_string(),
+                                                parse_error::create(101, m_lexer.get_position(), exception_message(token_type::literal_or_value, "value"), nullptr));
+                    }
                     case token_type::uninitialized:
                     case token_type::end_array:
                     case token_type::end_object:
                     case token_type::name_separator:
                     case token_type::value_separator:
-                    case token_type::end_of_input:
                     case token_type::literal_or_value:
                     default: // the last token was unexpected
                     {
