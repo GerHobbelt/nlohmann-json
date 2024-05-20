@@ -1144,14 +1144,17 @@ The following compilers are currently used in continuous integration at [AppVeyo
 
 | Compiler                                                                                               | Operating System   | CI Provider    |
 |--------------------------------------------------------------------------------------------------------|--------------------|----------------|
-| Apple Clang 11.0.3 (clang-1103.0.32.62);  Xcode 11.7                                                   | macOS 11.6.8       | GitHub Actions |
-| Apple Clang 12.0.0 (clang-1200.0.32.29);  Xcode 12.4                                                   | macOS 11.6.8       | GitHub Actions |
-| Apple Clang 12.0.5 (clang-1205.0.22.11);  Xcode 12.5.1                                                 | macOS 11.6.8       | GitHub Actions |
-| Apple Clang 13.0.0 (clang-1300.0.29.3);   Xcode 13.0                                                   | macOS 11.6.8       | GitHub Actions |
-| Apple Clang 13.0.0 (clang-1300.0.29.3);   Xcode 13.1                                                   | macOS 12.4         | GitHub Actions |
-| Apple Clang 13.0.0 (clang-1300.0.29.30);  Xcode 13.2.1                                                 | macOS 12.4         | GitHub Actions |
-| Apple Clang 13.1.6 (clang-1316.0.21.2.3); Xcode 13.3.1                                                 | macOS 12.4         | GitHub Actions |
-| Apple Clang 13.1.6 (clang-1316.0.21.2.5); Xcode 13.4.1                                                 | macOS 12.4         | GitHub Actions |
+| Apple Clang 11.0.3 (clang-1103.0.32.62);  Xcode 11.7                                                   | macOS 11.7.1       | GitHub Actions |
+| Apple Clang 12.0.0 (clang-1200.0.32.29);  Xcode 12.4                                                   | macOS 11.7.1       | GitHub Actions |
+| Apple Clang 12.0.5 (clang-1205.0.22.11);  Xcode 12.5.1                                                 | macOS 11.7.1       | GitHub Actions |
+| Apple Clang 13.0.0 (clang-1300.0.29.3);   Xcode 13.0                                                   | macOS 11.7.1       | GitHub Actions |
+| Apple Clang 13.0.0 (clang-1300.0.29.3);   Xcode 13.1                                                   | macOS 12.6.1       | GitHub Actions |
+| Apple Clang 13.0.0 (clang-1300.0.29.30);  Xcode 13.2.1                                                 | macOS 12.6.1       | GitHub Actions |
+| Apple Clang 13.1.6 (clang-1316.0.21.2.3); Xcode 13.3.1                                                 | macOS 12.6.1       | GitHub Actions |
+| Apple Clang 13.1.6 (clang-1316.0.21.2.5); Xcode 13.4.1                                                 | macOS 12.6.1       | GitHub Actions |
+| Apple Clang 14.0.0 (clang-1400.0.29.102); Xcode 14.0                                                   | macOS 12.6.1       | GitHub Actions |
+| Apple Clang 14.0.0 (clang-1400.0.29.102); Xcode 14.0.1                                                 | macOS 12.6.1       | GitHub Actions |
+| Apple Clang 14.0.0 (clang-1400.0.29.202); Xcode 14.1                                                   | macOS 12.6.1       | GitHub Actions |
 | Clang 3.5.2                                                                                            | Ubuntu 20.04.3 LTS | GitHub Actions |
 | Clang 3.6.2                                                                                            | Ubuntu 20.04.3 LTS | GitHub Actions |
 | Clang 3.7.1                                                                                            | Ubuntu 20.04.3 LTS | GitHub Actions |
@@ -1310,7 +1313,9 @@ endif()
 
 If you are using the [Meson Build System](https://mesonbuild.com), add this source tree as a [meson subproject](https://mesonbuild.com/Subprojects.html#using-a-subproject). You may also use the `include.zip` published in this project's [Releases](https://github.com/nlohmann/json/releases) to reduce the size of the vendored source tree. Alternatively, you can get a wrap file by downloading it from [Meson WrapDB](https://wrapdb.mesonbuild.com/nlohmann_json), or simply use `meson wrap install nlohmann_json`. Please see the meson project for any issues regarding the packaging.
 
-The provided `meson.build` can also be used as an alternative to cmake for installing `nlohmann_json` system-wide in which case a pkg-config file is installed. To use it, simply have your build system require the `nlohmann_json` pkg-config dependency. In Meson, it is preferred to use the [`dependency()`](https://mesonbuild.com/Reference-manual.html#dependency) object with a subproject fallback, rather than using the subproject directly.
+The provided `meson.build` can also be used as an alternative to CMake for installing `nlohmann_json` system-wide in which case a pkg-config file is installed. To use it, simply have your build system require the `nlohmann_json` pkg-config dependency. In Meson, it is preferred to use the [`dependency()`](https://mesonbuild.com/Reference-manual.html#dependency) object with a subproject fallback, rather than using the subproject directly.
+
+If you are using [Bazel](https://bazel.build/) you can simply reference this repository using `http_archive` or `git_repository` and depend on `@nlohmann_json//:json`.
 
 If you are using [Conan](https://www.conan.io/) to manage your dependencies, merely add [`nlohmann_json/x.y.z`](https://conan.io/center/nlohmann_json) to your `conanfile`'s requires, where `x.y.z` is the release version you want to use. Please file issues [here](https://github.com/conan-io/conan-center-index/issues) if you experience problems with the packages.
 
