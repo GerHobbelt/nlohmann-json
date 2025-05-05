@@ -94,7 +94,7 @@ class parser
     {
         if (callback)
         {
-            json_sax_dom_callback_parser<BasicJsonType> sdp(result, callback, allow_exceptions);
+            json_sax_dom_callback_parser<BasicJsonType, InputAdapterType> sdp(result, callback, allow_exceptions, &m_lexer);
             sax_parse_internal(&sdp);
 
             // in strict mode, input must be completely read
@@ -122,7 +122,7 @@ class parser
         }
         else
         {
-            json_sax_dom_parser<BasicJsonType> sdp(result, allow_exceptions);
+            json_sax_dom_parser<BasicJsonType, InputAdapterType> sdp(result, allow_exceptions, &m_lexer);
             sax_parse_internal(&sdp);
 
             // in strict mode, input must be completely read
@@ -194,7 +194,7 @@ class parser
                 {
                     case token_type::begin_object:
                     {
-                        if (JSON_HEDLEY_UNLIKELY(!sax->start_object(static_cast<std::size_t>(-1))))
+                        if (JSON_HEDLEY_UNLIKELY(!sax->start_object(detail::unknown_size())))
                         {
                             return false;
                         }
@@ -239,7 +239,7 @@ class parser
 
                     case token_type::begin_array:
                     {
-                        if (JSON_HEDLEY_UNLIKELY(!sax->start_array(static_cast<std::size_t>(-1))))
+                        if (JSON_HEDLEY_UNLIKELY(!sax->start_array(detail::unknown_size())))
                         {
                             return false;
                         }
