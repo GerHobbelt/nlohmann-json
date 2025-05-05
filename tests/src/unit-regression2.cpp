@@ -3,7 +3,7 @@
 // |  |  |__   |  |  | | | |  version 3.11.3
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
 //
-// SPDX-FileCopyrightText: 2013 - 2024 Niels Lohmann <https://nlohmann.me>
+// SPDX-FileCopyrightText: 2013 - 2025 Niels Lohmann <https://nlohmann.me>
 // SPDX-License-Identifier: MIT
 
 // cmake/test.cmake selects the C++ standard versions with which to build a
@@ -376,6 +376,19 @@ template <>
 inline for_3333::for_3333(const json& j)
     : for_3333(j.value("x", 0), j.value("y", 0))
 {}
+
+/////////////////////////////////////////////////////////////////////
+// for #3810
+/////////////////////////////////////////////////////////////////////
+
+struct Example_3810
+{
+    int bla{};
+
+    Example_3810() = default;
+};
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Example_3810, bla);
 
 TEST_CASE("regression tests 2")
 {
@@ -814,6 +827,15 @@ TEST_CASE("regression tests 2")
         }
     }
 
+    SECTION("issue #4530 - Serialization of empty tuple")
+    {
+        const auto source_tuple = std::tuple<>();
+        const nlohmann::json j = source_tuple;
+
+        CHECK(j.get<decltype(source_tuple)>() == source_tuple);
+        CHECK("[]" == j.dump());
+    }
+
     SECTION("issue #2865 - ASAN detects memory leaks")
     {
         // the code below is expected to not leak memory
@@ -994,6 +1016,26 @@ TEST_CASE("regression tests 2")
 
         CHECK(p.x == 1);
         CHECK(p.y == 2);
+    }
+
+    SECTION("issue #3810 - ordered_json doesn't support construction from C array of custom type")
+    {
+        Example_3810 states[45]; // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+
+        // fix "not used" warning
+        states[0].bla = 1;
+
+        const auto* const expected = R"([{"bla":1},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0},{"bla":0}])";
+
+        // This works:
+        nlohmann::json j;
+        j["test"] = states;
+        CHECK(j["test"].dump() == expected);
+
+        // This doesn't compile:
+        nlohmann::ordered_json oj;
+        oj["test"] = states;
+        CHECK(oj["test"].dump() == expected);
     }
 }
 
