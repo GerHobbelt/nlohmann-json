@@ -163,7 +163,7 @@ using the subproject directly.
     - :octicons-question-24: [Bazel website](https://bazel.build)
 
 This repository provides a [Bazel](https://bazel.build/) `MODULE.bazel` and a corresponding `BUILD.bazel` file. Therefore, this
-repository can be referenced within a `MODULE.bazel` by rules such as `archive_override`, `git_override`, or `local_path_override`. To use the library you need to depend on the target `@nlohmann_json//:json` (i.e., via `deps` attribute).
+repository can be referenced within a `MODULE.bazel` by rules such as `archive_override`, `git_override`, or `local_path_override`. To use the library, you need to depend on the target `@nlohmann_json//:json` (i.e., via `deps` attribute).
 
 ??? example
 
@@ -307,7 +307,7 @@ the [nlohmann_json package](https://hunter.readthedocs.io/en/latest/packages/pkg
 hunter_add_package(nlohmann_json)
 ```
 
-Please see the  Hunter project for any issues regarding the packaging.
+Please see the Hunter project for any issues regarding the packaging.
 
 ??? example
 
@@ -398,7 +398,7 @@ If you are using [cget](http://cget.readthedocs.io/en/latest/), you can install 
 cget install nlohmann/json
 ```
 
-A specific version can be installed with `cget install nlohmann/json@v3.11.3`. Also, the multiple header version can be
+A specific version can be installed with `cget install nlohmann/json@v3.12.0`. Also, the multiple header version can be
 installed by adding the `-DJSON_MultipleHeaders=ON` flag (i.e., `cget install nlohmann/json -DJSON_MultipleHeaders=ON`).
 
 ??? example
@@ -727,7 +727,7 @@ If you are using [`CPM.cmake`](https://github.com/TheLartians/CPM.cmake), add th
 [CPM.cmake script](https://github.com/TheLartians/CPM.cmake#adding-cpm) and the following snippet to your CMake project:
 
 ```cmake
-CPMAddPackage("gh:nlohmann/json@3.11.3")
+CPMAddPackage("gh:nlohmann/json@3.12.0")
 ```
 
 ??? example
